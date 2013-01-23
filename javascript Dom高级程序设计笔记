@@ -1,0 +1,256 @@
+第一章： 遵循最佳实践
+
+1.1 不唐突和渐进增强
+    a. 消除不必要的行为和令人讨厌的功能。
+    b. 即使在没有javascript的情况，也能使页面和标记持续有效。
+1.2.1 把行为从结构分离
+    a. 最好在任何时候都将全部脚本包含在一个外部源文件中。
+1.2.1.1  javascript前缀【javascript:...】
+    a. 只能处理一个函数，不能处理多个
+    b. 如果函数有返回值，原先的页面会被返回的结果覆盖
+        解决方案，function包装为不返回任何值函数。
+    c. 前缀方式不是官方ECMAScript标准的一部分。
+    **在一个常规的<a>链接被单击时，浏览器会正常执行anchor的默认动作：href；
+    **然而，当处理click这样的交互式动作时，则会首先执行onclick事件属性，
+    **然后才是anchor的href。
+    **但是如果事件有return false就会阻止默认动作：href。即不会打开href链接。
+    
+    <a href="index.html" onclick="popup(this.href);return false">test</a>
+    此处onclick直接引用this来使用<a>,在javascript中，this用于控制函数的执行
+    环境，引用的是对象的所有者：<a>是onclick的所有者。
+    
+    **getElementsByClassName('popup','a');
+
+    不唐突的典范案例：http://lokeshdhakar.com/projects/lightbox2/
+1.2.2 不要版本检测。
+    检测的结果无非是Microsoft Firefox Safari Opera, 可是并不意味着只有这些浏览器
+    1. 使用能力检测 即对象检测：在执行代码前检测某个脚本对象是否存在
+1.2.4 为重用命名空间而进行规划
+    a. 伪命名空间思想。
+        (function()
+        { //your javascript code
+            function holle(){alert("holle!");}
+            window['myNamespace'] = {};
+            windwo['myNamespace']['sayHello'] = hello;
+        })()
+        这种方式可以封装并保护自己的所有函数，对象和变量。内部可以相互访问，
+        脚本其他部分中的代码无法访问。
+        但是window['myNamespace']之后，外部变量就可以通过myNamespace.sayHello()
+        访问你的hello()函数了。
+1.2.5 通过可重用的对象把事情简化
+
+1.3 Javascript语法中常见陷阱
+
+    1. 区分大小写
+    2. 单引号和双引号 （尽量使用单引号来创建 string）
+    3. 换行，字符串中不能有换行。。
+    4. 相同名称函数只能存在一个
+**
+    不加var声明变量，变量不会在作用域链上面创建，当使用到的时候会在沿着作用域链一直找，
+    找不到会在window链上创建该变量，即为全局变量了。。可以将var理解为特定变量的作用域链的终点，
+    其中也包扩函数参数，如： function myfunc(myvar){...} 此处的myvar。
+
+    5. 闭包
+    就是函数A返回了一个不属于它的作用域链上的一个变量时，假设返回了函数B的内部变量，然后B的外部函数C调用
+    函数A之后，B的生命周期结束，但是返回的这个B的变量会存在在内存中。值得注意的是，如果函数C中有一个和函数B
+    相同名称的变量时，并不会覆盖其值。也就是说其值还是并不在C的作用域链上面。很奇怪的存在。
+    如果要避免闭包情况，就得将A返回的B的内部变量，连接到A的作用域链上面。这样就返回了A的作用域链，也就不会
+    出现闭包的情况。
+    function B() 
+    {
+        var retVal = 1;
+        return function A()
+        {
+            return retVal;
+        }
+    }
+
+    (function C()
+    {
+        var cVal = B()();
+        alert(cVal);
+    })();
+
+    C();
+
+    6. 迭代 for in &&  hasOwnPropety()
+    
+    getElementsByTagName等取到的集合里面会有以下额外信息：
+        a》 对象length;
+        b》 item；
+        c》 iterator；
+        d》 namedItem；
+    此时for in组合会迭代到这些额外信息。所以可以用hasOwnPropety来过滤这些信息。
+
+
+第二章 创建可重用的对象  （一切皆对象）
+
+
+    对象：  1 Function 对象     a Function 实例
+                                b 构造函数的Function 必须通过new来实例化
+            2 Object 对象
+
+    javascript内置以下对象
+            1 Object对象  通用基础对象，用来创建简单静态对象。
+            2 Function对象 
+            3 Array对象
+            4 String Boolean Number对象
+            5 Math Date Regexp以及其他对象
+
+    2.2.1 创建构造函数：一变多
+
+    Function对象是创建构造函数的起点。有3中方式来创建function对象
+    1. function myconstruction(a){...}
+    2. var myconstruction = function(a){...}
+    3. var myconstruction = new Function('a','/*某些代码*/');
+    不过最好不要使用new Function的方式来创建构造函数，会导致性能问题。
+    
+    Function对象的特殊之处在于它的实例也可以作为构造函数
+
+    2.2.2  共有，私有等成员。
+        
+    function myConstructor()
+    {
+        //私有方法&&属性
+        var name = 'Ryan';
+        function getName(){ return name;}
+        
+        //公有(特权)方法&&属性 （这种可以访问到 私有属性方法）
+        this.age = 25;
+        this.getAge = function (){return this.age;}
+
+        //静态方法&&属性 【不会实例不会继承静态方法。】
+        myConstructor.phone = 110;
+        myConstructor.getPhone = function(){return myConstructor.phone ;}
+    }
+        //公有(特权)方法&&属性 （这种不能访问 私有属性方法）
+        myConstructor.prototype.company = 'fujixerox';
+    
+    this指针属于方法所有者。
+
+    function的call && apply方法：重新定义函数执行环境。
+    任何function都可以call或者apply。
+
+    try {/*function*/}
+    catch{}
+
+    node.innerHtml 等价于 node.appendChild(document.createTextNode(message)); 
+    虽然innerHtml所有浏览器都支持，但是innerHtml并非W3C规范、
+    
+    现版本javascript的createTextNode返回值只能是text节点。不会将html转义为html节点。
+
+
+第三章 dom核心和dom html
+    W3C规范： www.w3.org/dom
+
+    3.2.1 DOM的级别
+        DOM分为1级 2级 3级，现在的浏览器基本都支持dom3了。所以只记录一下dom3就ok.
+
+        DOM 3 总共包括以下3个推荐规范。 
+            1. DOM3 Core：
+            2. DOM3 Load and Save
+            3. DOM3 Validation
+            4. DOM3 Events
+            5. DOM3 XPath
+            6. DOM3 Views,Formatting,DOM3 Abstract Schemas
+        可以使用DOMImplementation对象来检测浏览器支持哪种W3C DOM特性。
+        在web浏览器中，DOMImplementation对象被实例化为document.implementation。
+        document.implementation.hasFeature()来进行特性验证。
+        if (document.implementation)
+        {
+            if (document.implementation.hasFeature('Core',2.0))
+            {
+                alert("DOM2 Core Supported!");
+            }
+            else
+            {
+                alert("DOM2 Core Not Supported!");
+            }
+        }
+        else
+        {
+            alert("No Implementation Support / DOM Not Supported!");
+        }
+    
+
+    3.4 DOM核心 && 继承
+        当浏览器解析html中的标记时，它会根据自身支持的W3C DOM模块把标记转换成对象。
+        文档中每个标签都可以用通过一个核心对象来表示
+        当浏览器解析完html文档之后，每个节点并非就是一个简单地Element对象实例，而是
+        继承了很多东西的Element对象的扩展
+        
+        以<a>的HTMLAnchorElement对象为例，继承为：
+        Node(DOM2核心) ---> Element(DOM2核心) ---> HTML Element(DOM2 HTML)---> HTMLAnchorElement(DOM2 HTML)
+
+    3.4.2 核心node对象
+        每个Element包括document和documentElement都继承/扩展于node对象。
+        
+        **node对象中包括一些识别的特征，例如:
+        nodeName: 大写输出,对于不基于文档标签的其他对象（如Document）来说，nodeName取决于引用对象的类型。
+        nodeValue: 只适用于很少的DOM对象，Attr & Text & CDATASection & Comment & processingInstruction,其他返回Null，
+        nodeType: 返回节点类型
+        parentNode, childNodes(item方法), firstNode, lastNode,
+        previousSibling, nextSibling, attributes, ownerDocument.
+
+        检测某个节点是否具有子节点或属性，可以使用hasChildnodes() 和 hasAttributes()方法
+    ****ie不支持hasAttributes()方法。
+        
+        操纵DOM节点：appendChild & insertBefore 
+                    + prependChild & insertAfter（后面这两个不是W3C规范）
+                    + replaceChild & removeChild
+
+    ****document.getElementById()返回的是一个对node对象的引用，并非一个副本。
+        所以在 var myNode = document.getElementById(‘mynode’)；之后
+        appendChild之类的操作，实际上移动并非复制。
+        可以 var myNodeCL = myNode.cloneNode(true);这样，然后操作，就是副本。
+
+
+
+    3.4.3 核心Element对象  （都拥有Node对象的属性和方法）
+        1. 操纵Element对象的属性
+            为了简化对attribute的处理，Element对象中包含了很多用来操纵基础Node对象的attributes属性的方法。
+            getAttribute(name)
+            setAttribute(name,value)
+            removeAttribute(name)
+            一些基于实际DOM的attr的
+            getAttributeNode()
+            setAttributeNode(name,value)
+            removeAttributeNode(name)
+        区别：
+            getAttribute("") 方法返回属性的值。 
+            getAttributeNode("") 方法返回属性节点，是一个对象，getAttributeNode('').value取得节点值。 
+            
+        2. 在Element对象中查找Element对象
+            在Element对象的范围内，可以查找其他节点唯一有效的方法就是getElementByTagName(),
+            此方法会返回一个nodeList对象。并且此方法可以使用通配符（*）来匹配元素
+                list = document.getElementById('myNode');
+                ancestors = list.getElementsByTagName(*);
+                ancestors.item(0).nodeName;
+                ....
+
+
+
+        3.4.4 核心Document对象
+            Element对象中没有用于创建新Element对象的方法，创建DOM元素的操作完全由Document来负责处理。
+            
+            js中全局变量为window对象，而document则是window的一个属性，window.document，
+            document也是node对象的扩展，所以node的属性方法也适用于document
+
+            1. document.documentElement属性
+                访问文档跟元素的快捷方式，对于html文档而言，就是<html>标签
+            2. 创建节点方法
+                createAttribute(name): 创建节点类型Node.ATTRIBUTE_NODE的Attr节点。
+                createCDATASection(data): 创建节点类型Node.CDATA_SECTION_NODE的CDATASection节点。
+                createComment(data): 创建节点类型Node.COMMENT_NODE的Comment节点。
+                createDocumentFragment(): 创建节点类型Node.DOCUMENT_FRAGMENT_NODE的DocumentFragment节点。
+                createElement(TagName): 创建节点类型Node.ELEMENT_NODE的Element节点。
+                createEntityReference(name): 
+                createProcessingInstruction(target,data): 
+                createTextNode(name):创建节点类型Node.TEXT_NODE的text节点。
+            3. 使用document对象的方法来查找Element对象
+                document.getElementById()
+                document.getElementsByTagName()
+                但是getElementsByTagName()方法document和element对象都有，所以可以用此方法来查找整个文档
+                document.getElementsByTagName()
+                document.getElementById().getElementsByTagName()
+                

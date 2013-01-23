@@ -1,0 +1,65 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            .backcolor
+            {
+                background-color: black;
+            }
+            .backcolor-down
+            {
+                background-color: RED;
+            }
+        </style>
+    </head>
+    <body class=".backcolor" style="color:red;"> 
+        asdfdsf
+        <button id="menu">menu</button>
+        
+        <span style="color:white;background-color:black;font-weight:bold;padding:0px,5px;">ccc</span>
+        
+        <script src="mylib/ADS.js"></script>
+        <script src="mylib/mylogger.js"></script>
+    	<script type="text/javascript">
+        
+        
+        ADS.log.writeRaw('aaa');
+         ADS.log.writeRaw('<b>aaa</b>');
+        ADS.log.write('bbb');
+        ADS.log.write('bbb');
+        ADS.log.write('bbb');
+        ADS.log.write('bbb');
+        ADS.log.write('bbb');
+        ADS.log.write('bbb');
+        ADS.log.write('bbb');
+        ADS.log.write('bbb');
+        ADS.log.header('ccc');
+        
+        
+        
+   /*      ADS.addEvent(ADS.$("menu"),"mousedown",function(){document.body.className = "backcolor-down";});
+        ADS.addEvent(ADS.$("menu"),"mouseup",function(){document.body.className = "backcolor";});
+       function change(){//this.style.color = 'green';
+                alert(arguments[0]);}
+        change.prototype.say = function(){alert("say");}
+        alert(change);
+        (new change).say();
+        change.call(document.body,'aaa');
+       
+        window['message'] = "window";
+        function doubleCheck()
+        {
+            this.message = 'doubled';
+        }
+        
+        doubleCheck.prototype.say = function(){alert(this.message);}
+        var a = new doubleCheck;
+        a.say();
+        a.say.apply(window,[])
+        ADS.bindFunction(window, a.say);
+        */
+		</script>
+        
+    </body>
+</html>

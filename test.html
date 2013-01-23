@@ -1,0 +1,162 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script src="vector2d.js"></script>
+        <style>
+        body
+			{
+				font-family: Monospace;
+				margin: 0px;
+				overflow: hidden;
+			}
+		</style>
+		<script type="text/javascript">
+var buttons = [];
+        // Main initialization
+        function main_init() {
+
+            // Create canvas and context objects
+            canvas = document.getElementById('panel');
+            ctx = canvas.getContext('2d');
+
+            // Prepare data for our fire object and prepare palette
+            img_data = ctx.createImageData(canvas.width, canvas.height);
+            data_width = img_data.width,
+            data_height = img_data.height;
+    // prepare_palette();
+
+            // Fill new array with 0
+    //out_data = fill_new_array(data_width * data_height, 0)
+
+            // Prepare image to buttons
+            var buttonImage = new Image();
+            buttonImage.src = 'button.png';
+            buttonImage.onload = function() {};
+
+            // Prepare 3 different buttons
+            //buttons.push(new Button(0, 10, 245, 62, 'normal', buttonImage, 'button #1'));
+            //buttons.push(new Button(250, 10, 245, 62, 'normal', buttonImage, 'button #2'));
+            //buttons.push(new Button(500, 10, 245, 62, 'normal', buttonImage, 'button #3'));
+            //buttons.push(new Button(750, 10, 245, 62, 'normal', buttonImage, 'button #4'));
+                buttons.push(new Button(0, 10, 10, 10, 'normal', buttonImage, 'button #1'));
+            //buttons.push(new Button(250, 10, 245, 62, 'normal', buttonImage, 'button #2'));
+            //buttons.push(new Button(500, 10, 245, 62, 'normal', buttonImage, 'button #3'));
+            //buttons.push(new Button(750, 10, 245, 62, 'normal', buttonImage, 'button #4'));
+            // Loop main scene
+            setInterval(drawScene, 40);
+
+            // Onmousemove event handler
+            canvas.onmousemove = function(e) {
+                var mouse = getMousePosition(e).sub(new vector2d(canvas.offsetLeft, canvas.offsetTop));
+
+                for (var i = 0; i < buttons.length; i++) { // Apply 'hover' state for buttons
+                    if (buttons[i].state != 'pressed') {
+                        buttons[i].state = 'normal';
+                        buttons[i].imageShift = 0;
+                        if (mouse.x > buttons[i].x && mouse.x < buttons[i].x+buttons[i].w && mouse.y > buttons[i].y && mouse.y < buttons[i].y+buttons[i].h) {
+                            buttons[i].state = 'hover';
+                            buttons[i].imageShift = 136;
+                        }
+                    }
+                }
+            }
+
+            // Onmousedown event handler
+            canvas.onmousedown = function(e) {
+                var mouse = getMousePosition(e).sub(new vector2d(canvas.offsetLeft, canvas.offsetTop));
+
+                for (var i = 0; i < buttons.length; i++) { // Apply 'pressed' state for buttons
+                    if (mouse.x > buttons[i].x && mouse.x < buttons[i].x+buttons[i].w && mouse.y > buttons[i].y && mouse.y < buttons[i].y+buttons[i].h) {
+                        buttons[i].state = 'pressed';
+                        buttons[i].imageShift = 68;
+                    }
+                }
+            }
+
+            // Onmouseup event handler
+            canvas.onmouseup = function(e) {
+                var mouse = getMousePosition(e).sub(new vector2d(canvas.offsetLeft, canvas.offsetTop));
+
+                for (var i = 0; i < buttons.length; i++) { // Reset states for buttons
+                    if (mouse.x > buttons[i].x && mouse.x < buttons[i].x+buttons[i].w && mouse.y > buttons[i].y && mouse.y < buttons[i].y+buttons[i].h) {
+                        alert(buttons[i].text + ' is pushed');
+                    }
+
+                    buttons[i].state = 'normal';
+                    buttons[i].imageShift = 0;
+                }
+            }
+        }
+        // Get mouse position function
+        function getMousePosition(e){
+            if (!e){
+                var e = window.event;
+            } 
+            if (e.pageX || e.pageY){
+                return new vector2d(e.pageX, e.pageY);
+            } else if (e.clientX || e.clientY){
+                return new vector2d(e.clientX, e.clientY);
+            } 
+        }
+        // Button object
+        function Button(x, y, w, h, state, image, text) {
+            this.x = x;
+            this.y = y;
+            this.w = w;
+            this.h = h;
+            this.state = state;
+            this.imageShift = 0;
+            this.image = image;
+            this.text = text;
+        }
+        // Draw Button function
+        function drawButton(ctx, button) {
+            // draw button image
+            ctx.drawImage(button.image, 0, button.imageShift, button.w, button.h, button.x, button.y, button.w, button.h);
+
+            // and text
+            ctx.fillText(button.text, button.x + button.w / 2, 5 + button.y + button.h / 2);
+        }
+        // Draw Main scene
+        function drawScene() {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // clear canvas
+            // Draw all the buttons
+            for (var ib = 0; ib < buttons.length; ib++) { //
+                drawButton(ctx, buttons[ib]);
+            }
+        }
+        // Prepare palette function
+        function prepare_palette() {
+            for (var i = 0; i < 64; ++i) {
+                colors[i + 0] = {r: 0, g: 0, b: i << 1, a: i};
+                colors[i + 64] = {r: i << 3, g: 0, b: 128 - (i << 2), a: i+64};
+                colors[i + 128] = {r: 255, g: i << 1, b: 0, a: i+128};
+                colors[i + 192] = {r: 255, g: 255, b: i << 2, a: i+192};
+            }
+        }
+
+        // Window Onload event handler
+        if (window.attachEvent) {
+            window.attachEvent('onload', main_init);
+        } else {
+            if(window.onload) {
+                var curronload = window.onload;
+                var newonload = function() {
+                    curronload();
+                    main_init();
+                };
+                window.onload = newonload;
+            } else {
+                window.onload = main_init;
+            }
+        }
+		</script>
+    </head>
+    <body>
+    <canvas id="panel" width="1000px" height="100px">HTML5 compliant browser required</canvas>
+
+
+    </body>
+</html>

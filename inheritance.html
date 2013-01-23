@@ -1,0 +1,280 @@
+<html>
+<head>
+<title>Classical Inheritance in JavaScript</title>
+<style>
+body {background-color: linen; margin: 8%;}
+th {background-color: thistle; border: black solid 1px; text-align: left;
+    padding-left: 10px; padding-right: 10px; vertical-align: top;}
+td {background-color: white; border: black solid 1pt; padding-left: 10px;
+    padding-right: 10px; vertical-align: top;}
+table {margin: 10px; float:right; border: 0px; cellpadding: 0px;}
+p {margin: 10px}
+pre {margin-left: 40px}
+</style>
+</head>
+<body>
+<h1 align=center>Classical Inheritance in JavaScript</h1>
+<p></p>
+<p align=center><a href="mailto:douglas@crockford.com"><font size="+1">Douglas
+Crockford</font></a><br>
+  <a href="http://www.crockford.com/" target=_top><tt>www.crockford.com</tt></a></p>
+<p>&nbsp;</p>
+<p align=center><i>And you think you're so clever and classless and free</i></p>
+<p align=center>&#151; John Lennon</p>
+<p><a href="http://www.crockford.com/javascript">JavaScript</a> is a <i>class-free</i>, object-oriented language, and as such,
+it uses prototypal inheritance instead of classical inheritance. This can be
+puzzling to programmers trained  in  conventional object-oriented languages
+like C++ and Java. JavaScript's prototypal inheritance  has more expressive
+power than classical inheritance, as we will see presently.</p>
+<table><tbody>
+  <tr>
+    <th>Java</th>
+    <th>JavaScript</th>
+  </tr>
+  <tr>
+    <td>Strongly-typed</td>
+    <td>Loosely-typed</td>
+  </tr>
+  <tr>
+    <td>Static</td>
+    <td>Dynamic</td>
+  </tr>
+  <tr>
+    <td>Classical</td>
+    <td>Prototypal</td>
+  </tr>
+  <tr>
+    <td>Classes</td>
+    <td>Functions</td>
+  </tr>
+  <tr>
+    <td>Constructors</td>
+    <td>Functions</td>
+  </tr>
+  <tr>
+    <td>Methods</td>
+    <td>Functions</td>
+  </tr>
+</tbody></table>
+<p>But first, why do we care about inheritance at all? There are primarily two
+reasons. The first is type convenience. We want the language system to
+automatically <i>cast</i> references of similar classes. Little type-safety is
+obtained from a type system which requires the routine explicit  casting of
+object references. This is of critical importance in strongly-typed languages,
+but it is irrelevant in loosely-typed languages like JavaScript, where object
+references  never need casting.</p>
+<p>The second reason is code reuse. It is very common to have a quantity of objects
+  all implementing exactly the same methods. Classes make it possible to create
+  them all from a single set of definitions. It is also common to have objects
+  that are similar to some other objects, but differing only in the addition or
+  modification of a small number of methods. Classical inheritance is useful for
+  this but prototypal inheritance is even more useful. </p>
+<p>To demonstrate this, we will introduce a little <a href="#sugar">sugar</a>
+  which will let us write in a style that resembles a conventional classical language.
+  We will then show useful patterns which are not available in classical languages.
+  Then finally, we will explain the <a href="#sugar">sugar</a>. </p>
+<h2>Classical Inheritance</h2>
+<p>First, we will make a <tt>Parenizor</tt> class that will have  set and get
+methods for its <tt>value</tt>, and a <tt>toString</tt> method that will wrap
+the <tt>value</tt> in parens. </p>
+<pre>function Parenizor(value) {
+    this.setValue(value);
+}
+
+Parenizor.method('setValue', function (value) {
+    this.value = value;
+    return this;
+});
+
+Parenizor.method('getValue', function () {
+    return this.value;
+});
+
+Parenizor.method('toString', function () {
+    return '(' + this.getValue() + ')';
+});
+</pre>
+<p>The syntax is a little unusual, but it is easy to recognize the classical
+pattern in it. The <tt>method</tt> method takes a method name and a function,
+adding them to the class as a public method.</p>
+<p>So now we can write</p>
+<pre>myParenizor = new Parenizor(0);
+myString = myParenizor.toString();</pre>
+<p>As you would expect, <tt>myString</tt> is <tt>&quot;(0)&quot;</tt>.</p>
+<p>Now we will make another class which will inherit from <tt>Parenizor</tt>,
+which is  the same except that its <tt>toString</tt> method will
+produce <tt>&quot;-0-&quot;</tt> if the <tt>value</tt> is zero or empty.</p>
+<pre>function ZParenizor(value) {
+    this.setValue(value);
+}
+
+ZParenizor.inherits(Parenizor);
+
+ZParenizor.method('toString', function () {
+    if (this.getValue()) {
+        return this.uber('toString');
+    }
+    return &quot;-0-&quot;;
+});
+</pre>
+<p>The <tt>inherits</tt> method is similar to Java's <tt>extends</tt>.
+The <tt>uber</tt> method is similar to Java's <tt>super</tt>. It lets a method
+call a method of  the parent class. (The names have been changed to avoid
+reserved word restrictions.)</p>
+<p>So now we can write</p>
+<pre>myZParenizor = new ZParenizor(0);
+myString = myZParenizor.toString();</pre>
+<p>This time, <tt>myString</tt> is <tt>&quot;-0-&quot;</tt>.</p>
+<p>JavaScript does not have classes, but we can program as though it does.</p>
+<h2>Multiple Inheritance</h2>
+<p>By manipulating a function's <tt>prototype</tt> object, we can implement
+multiple inheritance, allowing us to make a class built from the methods of
+multiple classes.  Promiscuous multiple inheritance can be difficult to
+implement and can potentially suffer from method name collisions. We could
+implement promiscuous multiple inheritance in JavaScript, but for this example
+we will use a more disciplined form
+called <i><a href="http://www.cosmik.com/aa-october99/stan_freberg.html">Swiss
+Inheritance</a></i>.</p>
+<p>Suppose there is a <tt>NumberValue</tt> class that has a <tt>setValue</tt>
+method that checks that the <tt>value</tt> is a number in a certain range,
+throwing an exception if necessary. We only want
+its <tt>setValue</tt> and <tt>setRange</tt> methods for our <tt>ZParenizor</tt>.
+We certainly don't want its <tt>toString</tt> method. So, we write</p>
+<pre>ZParenizor.swiss(NumberValue, 'setValue', 'setRange');</pre>
+<p>This adds only the requested methods to our class.</p>
+<h2>Parasitic Inheritance</h2>
+<p>There is another way to write <tt>ZParenizor</tt>. Instead of inheriting
+from <tt>Parenizor</tt>, we write a constructor that calls
+the <tt>Parenizor</tt> constructor, passing off the result as its own.
+And instead of adding public methods,  the constructor adds  <a href="http://www.crockford.com/javascript/private.html">privileged methods</a>.</p>
+<pre>function ZParenizor2(value) {
+    var that = new Parenizor(value);
+    that.toString = function () {
+        if (this.getValue()) {
+            return this.uber('toString');
+        }
+        return &quot;-0-&quot;
+    };
+    return that;
+}
+</pre>
+<p>Classical inheritance is about the <i>is-a</i> relationship, and parasitic
+  inheritance is about the <i>was-a-but-now's-a</i> relationship. The constructor
+  has a larger role in the construction of the object. Notice that the <tt>uber</tt>
+  n&eacute;e <tt>super</tt> method is still available to the privileged methods. </p>
+<h2>Class Augmentation</h2>
+<p>JavaScript's dynamism allows us to add or replace methods of an existing class.
+  We can call the <tt>method</tt> method at any time, and all present and future
+  instances of the class will have that method. We can literally extend a class
+  at any time. Inheritance works retroactively. We call this <i>Class Augmentation</i>
+  to avoid confusion with Java's <tt>extends</tt>, which means something else.</p>
+<h2>Object Augmentation</h2>
+<p>In the static object-oriented languages, if you want an object which is slightly
+  different than another object, you need to define a new class. In JavaScript,
+  you can add methods to individual objects without the need for additional classes.
+  This has enormous power because you can write far fewer classes and the classes
+  you do write can be much simpler. Recall that JavaScript objects are like hashtables.
+  You can add new values at any time. If the value is a function, then it becomes
+  a method. </p>
+<p>So in the example above, I didn't need a <tt>ZParenizor</tt> class at all.
+I could have simply modified my instance.</p>
+<pre>myParenizor = new Parenizor(0);
+myParenizor.toString = function () {
+    if (this.getValue()) {
+        return this.uber('toString');
+    }
+    return &quot;-0-&quot;;
+};
+myString = myParenizor.toString();</pre>
+<p>We added a <tt>toString</tt> method to our <tt>myParenizor</tt> instance without
+  using any form of inheritance. We can evolve individual instances because the
+  language is class-free. </p>
+<h2 id=sugar>Sugar</h2>
+<p>To make the examples above work, I wrote four <a href="http://en.wikipedia.org/wiki/Syntactic_sugar">sugar</a>
+  methods. First, the <tt>method</tt> method, which adds an instance method to
+  a class. </p>
+<pre>Function.prototype.method = function (name, func) {
+    this.prototype[name] = func;
+    return this;
+};</pre>
+<p>This adds a public method to the <tt>Function.prototype</tt>, so all
+functions get it by Class Augmentation. It takes a name and a function, and
+adds them to a function's <tt>prototype</tt> object. </p>
+<p>It returns <tt>this</tt>. When I write a method that doesn't need to return
+  a value, I usually have it return <tt>this</tt>. It allows for a cascade-style
+  of programming. </p>
+<p>Next comes the <tt>inherits</tt> method, which indicates that one class inherits
+  from another. It should be called after both classes are defined, but before
+  the inheriting class's methods are added. </p>
+<pre>
+Function.method('inherits', function (parent) {
+    this.prototype = new parent();
+    var d = {}, 
+        p = this.prototype;
+    this.prototype.constructor = parent; 
+    this.method('uber', function uber(name) {
+        if (!(name in d)) {
+            d[name] = 0;
+        }        
+        var f, r, t = d[name], v = parent.prototype;
+        if (t) {
+            while (t) {
+                v = v.constructor.prototype;
+                t -= 1;
+            }
+            f = v[name];
+        } else {
+            f = p[name];
+            if (f == this[name]) {
+                f = v[name];
+            }
+        }
+        d[name] += 1;
+        r = f.apply(this, Array.prototype.slice.apply(arguments, [1]));
+        d[name] -= 1;
+        return r;
+    });
+    return this;
+});</pre>
+<p>Again, we augment <tt>Function</tt>. We make an instance of the
+<tt>parent</tt> class and use it as the new <tt>prototype</tt>. We also
+correct the <tt>constructor</tt> field, and we add the <tt>uber</tt> method to
+the <tt>prototype</tt> as well.</p>
+<p>The <tt>uber</tt> method looks for the named method in its own <tt>prototype</tt>.
+  This is the function to invoke in the case of Parasitic Inheritance or Object
+  Augmentation. If we are doing Classical Inheritance, then we need to find the
+  function in the <tt>parent</tt>'s <tt>prototype</tt>. The <tt>return</tt> statement
+  uses the function's <tt>apply</tt> method to invoke the function, explicitly
+  setting <tt>this</tt> and passing an array of parameters. The parameters (if
+  any) are obtained from the <tt>arguments</tt> array. Unfortunately, the
+  <tt>arguments</tt>
+  array is not a true array, so we have to use <tt>apply</tt> again to invoke
+  the array <tt>slice</tt> method. </p>
+<p>Finally, the <tt>swiss</tt> method.</p>
+<pre>Function.method('swiss', function (parent) {
+    for (var i = 1; i &lt; arguments.length; i += 1) {
+        var name = arguments[i];
+        this.prototype[name] = parent.prototype[name];
+    }
+    return this;
+});</pre>
+<p>The <tt>swiss</tt> method loops through the <tt>arguments</tt>.
+For each <tt>name</tt>, it copies a member from the <tt>parent</tt>'s
+<tt>prototype</tt> to the new class's <tt>prototype</tt>.</p>
+<h2>Conclusion</h2>
+<p>JavaScript can be used like a classical language, but it also has a level of
+  expressiveness which is quite unique. We have looked at Classical Inheritance,
+  Swiss Inheritance, Parasitic Inheritance, Class Augmentation, and Object Augmentation.
+  This large set of code reuse patterns comes from a language which is considered
+  smaller and simpler than Java. </p>
+<p>Classical objects are hard. The only way to add a new member to a hard object is to create a new class. In JavaScript, objects are soft. A new member can be added to a soft object by simple assignment.</p>
+<p>Because objects in JavaScript are so flexible, you will want to think 
+  differently about class hierarchies. Deep hierarchies are inappropriate. 
+  Shallow hierarchies are efficient and expressive.</p>
+<p style="border: 2px solid black; padding: 1em;"> I have been writing JavaScript 
+  for 8 years now, and I have never once found need to use an <code>uber</code> 
+  function. The <var>super</var> idea is fairly important in the classical 
+  pattern, but it appears to be unnecessary in the prototypal and functional 
+  patterns. I now see my early attempts to support the classical model in 
+  JavaScript as a mistake.</p>
+</body></html>

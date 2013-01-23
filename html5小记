@@ -1,0 +1,18 @@
+
+网站也可以有QA模块:
+
+json 
+
+abc = 
+{
+"a":[{"a1": "a1__t"},{"a2":"a2__t"}，{"a3":"a3__t"}],
+"b":[{"b1": "b1__t"},{"b2":"b2__t"}，{"b3":"b3__t"}],
+"c":[{"c1": "c1__t"},{"c2":"c2__t"}，{"c3":"c3__t"}]
+}
+
+
+
+canvas 内部嵌套menu，
+drawimg + position   action： 计算mouse postion来 click hover 等等  
+
+http://www.vagrantup.com/ 参考

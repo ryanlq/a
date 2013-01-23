@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+
+    	</style>
+    </head>
+    <body> 
+        <div  style="z-index:-1;position:absolute;">
+            <canvas id="canvas" width="1000px" height="1000px">HTML5 compliant browser required</canvas>
+        </div>
+        <div style="z-index:12" style="float:top">asdsdfsdfsdf</div>sdfsdf
+        <br/>
+        <a id="anchor0" >anchor0</a><br/>
+        <a id="anchor1">anchor1</a><br/>
+        <a id="anchor2">anchor2</a>
+        <script src="mylib/ADS.js"></script>
+    	<script type="text/javascript">
+        
+ /*       var aa = (function  ()
+        {
+            var index = 0;
+            for (var i = 0; i < 3; i++)
+            {
+                var aObj = document.getElementById("anchor"+i);
+                //aObj.addEventListener("click", function () { alert("anchor"+i);}, false);
+                ADS.addEvent(aObj,"click",function () { alert("anchor"+i);});
+                index++;
+            }
+            function f2 (){
+                return (index++);
+            };
+            return f2;
+        })();
+         index = 1;
+        alert(aa());
+        index = 1;
+        alert(aa());
+        
+    var B =  
+    {
+        count : 1,
+        getName : function getCount()
+        {
+            return this.count++;
+        }
+    }
+
+
+    alert("count    "+B.getName());
+    alert("count    "+B.getName());
+*/
+
+        var all1 = document.body.getElementsByTagName('a'); 
+        alert("all1.length : " + all1.length);
+        all2 = document.body.getElementsByTagName('*');
+        alert("all2.length :" + all2.length);
+        for(var index in all)
+        {
+            
+            alert(index+":  "+all[index].innerText);
+        }
+		</script>
+        
+    </body>
+</html>
